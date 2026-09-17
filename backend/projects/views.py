@@ -1,4 +1,5 @@
 # projects/views.py
+from django.db import transaction
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -56,9 +57,10 @@ class LockPaymentView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated, IsClient]
 
+    @transaction.atomic
     def post(self, request, pk):
         try:
-            project = Project.objects.get(pk=pk, client=request.user)
+            project = Project.objects.select_for_update().get(pk=pk, client=request.user)
         except Project.DoesNotExist:
             return Response(
                 {'error': 'Project not found.'},
@@ -71,9 +73,8 @@ class LockPaymentView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Simulate escrow lock
         project.payment_status = 'locked'
-        project.save()
+        project.save(update_fields=['payment_status', 'updated_at'])
 
         return Response(
             {
@@ -83,7 +84,6 @@ class LockPaymentView(APIView):
             status=status.HTTP_200_OK
         )
 
-
 class SubmitWorkView(APIView):
     """
     POST /api/projects/{id}/submit-work/
@@ -92,9 +92,10 @@ class SubmitWorkView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated, IsFreelancer]
 
+    @transaction.atomic
     def post(self, request, pk):
         try:
-            project = Project.objects.get(pk=pk, freelancer=request.user)
+            project = Project.objects.select_for_update().get(pk=pk, freelancer=request.user)
         except Project.DoesNotExist:
             return Response(
                 {'error': 'Project not found.'},
@@ -143,9 +144,10 @@ class RequestRevisionView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated, IsClient]
 
+    @transaction.atomic
     def post(self, request, pk):
         try:
-            project = Project.objects.get(pk=pk, client=request.user)
+            project = Project.objects.select_for_update().get(pk=pk, client=request.user)
         except Project.DoesNotExist:
             return Response(
                 {'error': 'Project not found.'},
@@ -189,9 +191,12 @@ class ApproveWorkView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated, IsClient]
 
+    @transaction.atomic
     def post(self, request, pk):
         try:
-            project = Project.objects.get(pk=pk, client=request.user)
+            project = Project.objects.select_for_update().select_related('freelancer', 'job').get(
+                pk=pk, client=request.user
+            )
         except Project.DoesNotExist:
             return Response(
                 {'error': 'Project not found.'},
@@ -210,19 +215,16 @@ class ApproveWorkView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # ✅ Release payment to freelancer
         project.payment_status = 'released'
         project.work_status = 'approved'
-        project.save()
+        project.save(update_fields=['payment_status', 'work_status', 'updated_at'])
 
-        # ✅ Credit freelancer's balance
         freelancer = project.freelancer
         freelancer.balance += project.escrow_amount
-        freelancer.save()
+        freelancer.save(update_fields=['balance'])
 
-        # ✅ Mark job as completed
         project.job.status = 'completed'
-        project.job.save()
+        project.job.save(update_fields=['status'])
 
         return Response(
             {

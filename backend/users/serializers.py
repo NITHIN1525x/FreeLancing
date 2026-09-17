@@ -9,7 +9,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'role', 'bio', 'skills', 'wallet_address']
+        fields = ['id', 'username', 'email', 'password', 'role', 'bio', 'skills']
 
     def create(self, validated_data):
         # Create user with hashed password
@@ -20,7 +20,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             role=validated_data.get('role', 'client'),
             bio=validated_data.get('bio', ''),
             skills=validated_data.get('skills', ''),
-            wallet_address=validated_data.get('wallet_address', ''),
         )
         return user
 
@@ -31,7 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'email', 'role',
-            'bio', 'skills', 'wallet_address',
+            'bio', 'skills',
             'balance', 'avatar', 'date_joined'
         ]
         read_only_fields = ['id', 'email', 'role', 'balance', 'date_joined']

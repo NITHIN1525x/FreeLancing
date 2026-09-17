@@ -28,4 +28,5 @@ blockchain/cache/
 Thumbs.db
 
 # VS Code
-.vscode/
+.vscode/backend/.venv/
+.tools/

@@ -29,7 +29,7 @@ export default function JobsListPage() {
         fetchJobs()
     }, [search, category])
 
-    const fetchJobs = async () => {
+    async function fetchJobs() {
         setLoading(true)
         try {
             let url = '/jobs/?'
@@ -37,7 +37,7 @@ export default function JobsListPage() {
             if (category) url += `category=${category}`
             const res = await API.get(url)
             setJobs(res.data)
-        } catch (err) {
+        } catch (err){
             console.error(err)
         } finally {
             setLoading(false)

@@ -19,7 +19,7 @@ export default function ApplicantsPage() {
         fetchData()
     }, [jobId])
 
-    const fetchData = async () => {
+    async function fetchData() {
         try {
             const [jobRes, proposalsRes] = await Promise.all([
                 API.get(`/jobs/${jobId}/`),
@@ -27,7 +27,7 @@ export default function ApplicantsPage() {
             ])
             setJob(jobRes.data)
             setProposals(proposalsRes.data)
-        } catch (err) {
+        } catch {
             toast.error('Failed to load proposals.')
         } finally {
             setLoading(false)
@@ -38,13 +38,13 @@ export default function ApplicantsPage() {
         if (!window.confirm('Accept this proposal? A project will be created automatically.')) return
         setActionLoading(proposalId)
         try {
-            const res = await API.post(`/proposals/${proposalId}/accept/`)
+            await API.post(`/proposals/${proposalId}/accept/`)
             toast.success('Proposal accepted! Project created. 🎉')
             // Refresh proposals
             fetchData()
             // Go to projects
             setTimeout(() => navigate('/client/projects'), 1500)
-        } catch (err) {
+        } catch (err){
             toast.error(err.response?.data?.error || 'Failed to accept proposal.')
         } finally {
             setActionLoading(null)
@@ -58,7 +58,7 @@ export default function ApplicantsPage() {
             await API.post(`/proposals/${proposalId}/reject/`)
             toast.success('Proposal rejected.')
             fetchData()
-        } catch (err) {
+        } catch (err){
             toast.error(err.response?.data?.error || 'Failed to reject proposal.')
         } finally {
             setActionLoading(null)

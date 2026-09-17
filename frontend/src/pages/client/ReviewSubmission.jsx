@@ -21,11 +21,11 @@ export default function ReviewSubmission() {
         fetchProject()
     }, [id])
 
-    const fetchProject = async () => {
+    async function fetchProject() {
         try {
             const res = await API.get(`/projects/${id}/`)
             setProject(res.data)
-        } catch (err) {
+        } catch {
             toast.error('Failed to load project.')
         } finally {
             setLoading(false)
@@ -42,7 +42,7 @@ export default function ReviewSubmission() {
             const res = await API.post(`/projects/${id}/approve/`)
             toast.success(res.data.message || 'Work approved successfully.')
             navigate('/client/projects')
-        } catch (err) {
+        } catch (err){
             toast.error(err.response?.data?.error || 'Failed to approve work.')
         } finally {
             setActionLoading(false)
@@ -64,7 +64,7 @@ export default function ReviewSubmission() {
             setShowRevisionForm(false)
             setRevisionNotes('')
             fetchProject()
-        } catch (err) {
+        } catch (err){
             toast.error(err.response?.data?.error || 'Failed to request revision.')
         } finally {
             setActionLoading(false)

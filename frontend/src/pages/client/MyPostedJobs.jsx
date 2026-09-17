@@ -15,11 +15,11 @@ export default function MyPostedJobs() {
         fetchJobs()
     }, [])
 
-    const fetchJobs = async () => {
+    async function fetchJobs() {
         try {
             const res = await API.get('/jobs/my-jobs/')
             setJobs(res.data)
-        } catch (err) {
+        } catch {
             toast.error('Failed to load jobs.')
         } finally {
             setLoading(false)
@@ -32,7 +32,7 @@ export default function MyPostedJobs() {
             await API.delete(`/jobs/${jobId}/delete/`)
             toast.success('Job deleted successfully.')
             setJobs(jobs.filter(j => j.id !== jobId))
-        } catch (err) {
+        } catch {
             toast.error('Failed to delete job.')
         }
     }

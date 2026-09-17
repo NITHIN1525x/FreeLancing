@@ -32,16 +32,12 @@ class ProjectSerializer(serializers.ModelSerializer):
             'freelancer', 'freelancer_details',
             'escrow_amount', 'payment_status',
             'work_status', 'revision_notes',
-            'onchain_project_id',
-            'contract_address',
-            'last_tx_hash',
             'latest_submission',
             'created_at', 'updated_at'
         ]
         read_only_fields = [
             'client', 'freelancer', 'escrow_amount',
-            'payment_status', 'work_status', 'created_at',
-            'onchain_project_id', 'contract_address', 'last_tx_hash'
+            'payment_status', 'work_status', 'created_at'
         ]
 
     def get_latest_submission(self, obj):

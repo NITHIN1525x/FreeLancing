@@ -28,11 +28,11 @@ export default function ChatPage() {
         scrollToBottom()
     }, [messages])
 
-    const scrollToBottom = () => {
+    function scrollToBottom() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
 
-    const fetchData = async () => {
+    async function fetchData() {
         try {
             const [projectRes, messagesRes] = await Promise.all([
                 API.get(`/projects/${id}/`),
@@ -40,18 +40,18 @@ export default function ChatPage() {
             ])
             setProject(projectRes.data)
             setMessages(messagesRes.data.messages || [])
-        } catch (err) {
+        } catch {
             toast.error('Failed to load chat.')
         } finally {
             setLoading(false)
         }
     }
 
-    const fetchMessages = async () => {
+    async function fetchMessages() {
         try {
             const res = await API.get(`/projects/${id}/messages/`)
             setMessages(res.data.messages || [])
-        } catch (err) {
+        } catch (err){
             console.error(err)
         }
     }
@@ -65,7 +65,7 @@ export default function ChatPage() {
             setText('')
             fetchMessages()
             inputRef.current?.focus()
-        } catch (err) {
+        } catch {
             toast.error('Failed to send message.')
         } finally {
             setSending(false)
@@ -166,7 +166,7 @@ export default function ChatPage() {
                                     </p>
                                 </div>
                             ) : (
-                                messages.map((msg, index) => {
+                                messages.map((msg) => {
                                     const mine = isMyMessage(msg)
                                     const isFreelancer =
                                         msg.sender_details?.role === 'freelancer'

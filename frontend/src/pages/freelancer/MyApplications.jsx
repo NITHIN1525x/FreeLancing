@@ -16,11 +16,11 @@ export default function MyApplications() {
         fetchProposals()
     }, [])
 
-    const fetchProposals = async () => {
+    async function fetchProposals() {
         try {
             const res = await API.get('/proposals/my-proposals/')
             setProposals(res.data)
-        } catch (err) {
+        } catch {
             toast.error('Failed to load proposals.')
         } finally {
             setLoading(false)

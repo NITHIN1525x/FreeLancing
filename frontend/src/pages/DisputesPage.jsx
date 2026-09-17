@@ -34,7 +34,7 @@ export default function DisputesPage() {
         fetchData()
     }, [])
 
-    const fetchData = async () => {
+    async function fetchData() {
         try {
             const [disputesRes, projectsRes] = await Promise.all([
                 API.get('/disputes/'),
@@ -45,7 +45,7 @@ export default function DisputesPage() {
             setProjects(projectsRes.data.filter(
                 p => p.payment_status === 'locked' || p.payment_status === 'on_hold'
             ))
-        } catch (err) {
+        } catch {
             toast.error('Failed to load disputes.')
         } finally {
             setLoading(false)
@@ -66,7 +66,7 @@ export default function DisputesPage() {
             setReason('')
             setSelectedProject('')
             fetchData()
-        } catch (err) {
+        } catch (err){
             toast.error(err.response?.data?.error || 'Failed to raise dispute.')
         } finally {
             setSubmitting(false)
@@ -85,7 +85,7 @@ export default function DisputesPage() {
             toast.success('Dispute resolved successfully!')
             setResolvingId(null)
             fetchData()
-        } catch (err) {
+        } catch (err){
             toast.error(err.response?.data?.error || 'Failed to resolve dispute.')
         }
     }
@@ -95,7 +95,7 @@ export default function DisputesPage() {
             await API.post(`/disputes/${disputeId}/under-review/`)
             toast.success('Dispute marked as under review.')
             fetchData()
-        } catch (err) {
+        } catch {
             toast.error('Failed to update status.')
         }
     }

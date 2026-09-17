@@ -1,39 +1,27 @@
 // src/pages/freelancer/WalletPage.jsx
 import React, { useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
 import API from '../../api/axios.js'
 import { useAuth } from '../../context/AuthContext.jsx'
-import { useWeb3 } from '../../context/Web3Context.jsx'
 import FreelancerSidebar from '../../components/FreelancerSidebar.jsx'
 import '../../css/Dashboard.css'
 
 export default function WalletPage() {
-    const { user } = useAuth()
-    const {
-        account,
-        chainId,
-        connecting,
-        expectedChainId,
-        expectedRpcUrl,
-        isExpectedChain,
-        isMetaMaskInstalled,
-        connectWallet,
-        disconnectWallet,
-        switchToExpectedChain,
-    } = useWeb3()
+    const { user, refreshUser } = useAuth()
     const [projects, setProjects] = useState([])
     const [loading, setLoading] = useState(true)
-    const [syncingWallet, setSyncingWallet] = useState(false)
 
     useEffect(() => {
         fetchProjects()
-    }, [])
+    }, [refreshUser])
 
-    const fetchProjects = async () => {
+    async function fetchProjects() {
         try {
-            const res = await API.get('/projects/')
+            const [res] = await Promise.all([
+                API.get('/projects/'),
+                refreshUser(),
+            ])
             setProjects(res.data)
-        } catch (err) {
+        } catch (err){
             console.error(err)
         } finally {
             setLoading(false)
@@ -48,46 +36,13 @@ export default function WalletPage() {
         (sum, p) => sum + parseFloat(p.escrow_amount), 0
     )
 
-    const shortAddress = account
-        ? `${account.slice(0, 6)}...${account.slice(-4)}`
-        : 'Not connected'
-
-    const handleConnect = async () => {
-        try {
-            const selected = await connectWallet()
-            if (!selected) return
-
-            setSyncingWallet(true)
-            const res = await API.post('/payments/connect-wallet/', {
-                wallet_address: selected,
-            })
-            toast.success(res.data?.message || 'Wallet connected successfully!')
-        } catch (err) {
-            toast.error(err?.message || 'Failed to connect wallet.')
-        } finally {
-            setSyncingWallet(false)
-        }
-    }
-
-    const handleSwitchNetwork = async () => {
-        try {
-            setSyncingWallet(true)
-            await switchToExpectedChain()
-            toast.success('MetaMask switched to the local Ethereum network.')
-        } catch (err) {
-            toast.error(err?.message || 'Failed to switch MetaMask to the local network.')
-        } finally {
-            setSyncingWallet(false)
-        }
-    }
-
     return (
         <div className="dashboard-layout">
             <FreelancerSidebar />
 
             <main className="dashboard-main">
                 <div className="dashboard-header">
-                    <h1>💰 Wallet & Earnings</h1>
+                    <h1>💰 Earnings & Balance</h1>
                     <p>Track your earnings and payment history.</p>
                 </div>
 
@@ -123,7 +78,7 @@ export default function WalletPage() {
                             ${parseFloat(user?.balance || 0).toFixed(2)}
                         </h1>
                         <p style={{ opacity: 0.8, marginTop: '8px', fontSize: '0.88rem' }}>
-                            Available in your FreeLance wallet
+                            Available in your FreeLance account
                         </p>
                     </div>
                     <div style={{ fontSize: '5rem', opacity: 0.3 }}>💰</div>
@@ -131,73 +86,11 @@ export default function WalletPage() {
 
                 <div className="dashboard-card" style={{ marginBottom: '28px' }}>
                     <div className="card-header">
-                        <h2>MetaMask Wallet</h2>
+                        <h2>Account Payments</h2>
                     </div>
-
-                    {!isMetaMaskInstalled ? (
-                        <p style={{ color: '#b00020', fontWeight: 600 }}>
-                            MetaMask is not installed. Install it to enable blockchain escrow actions.
-                        </p>
-                    ) : (
-                        <>
-                            <p style={{ marginBottom: '10px', color: '#666' }}>
-                                Connected Address: <strong>{shortAddress}</strong>
-                            </p>
-                            <p style={{ marginBottom: '16px', color: '#666' }}>
-                                Chain ID: <strong>{chainId || 'Unknown'}</strong>
-                            </p>
-                            <p style={{ marginBottom: '10px', color: '#666' }}>
-                                Required Local Chain: <strong>{expectedChainId || 'Loading...'}</strong>
-                            </p>
-                            <p style={{ marginBottom: '16px', color: '#666' }}>
-                                Local RPC: <strong>{expectedRpcUrl || 'Loading...'}</strong>
-                            </p>
-                            {chainId && expectedChainId && !isExpectedChain && (
-                                <p style={{ marginBottom: '16px', color: '#b00020', fontWeight: 600 }}>
-                                    MetaMask is on the wrong network. Switch to the local Ethereum chain before sending payments.
-                                </p>
-                            )}
-
-                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                                {expectedChainId && !isExpectedChain && (
-                                    <button
-                                        className="btn-outline"
-                                        onClick={handleSwitchNetwork}
-                                        disabled={syncingWallet}
-                                    >
-                                        {syncingWallet ? 'Switching...' : 'Switch to Local Network'}
-                                    </button>
-                                )}
-                                {!account ? (
-                                    <button
-                                        className="btn-primary"
-                                        onClick={handleConnect}
-                                        disabled={connecting || syncingWallet}
-                                    >
-                                        {connecting || syncingWallet
-                                            ? 'Connecting...'
-                                            : '🦊 Connect MetaMask'}
-                                    </button>
-                                ) : (
-                                    <>
-                                        <button
-                                            className="btn-outline"
-                                            onClick={handleConnect}
-                                            disabled={syncingWallet}
-                                        >
-                                            {syncingWallet ? 'Syncing...' : '🔄 Sync Wallet to Profile'}
-                                        </button>
-                                        <button
-                                            className="btn-danger"
-                                            onClick={disconnectWallet}
-                                        >
-                                            Disconnect
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-                        </>
-                    )}
+                    <p style={{ color: '#666' }}>
+                        Your balance and payment history are securely managed in FreeLance. No external wallet is required.
+                    </p>
                 </div>
 
                 {/* Stats */}

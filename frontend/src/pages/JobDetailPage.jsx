@@ -28,7 +28,7 @@ export default function JobDetailPage() {
         fetchJob()
     }, [id])
 
-    const fetchJob = async () => {
+    async function fetchJob() {
         try {
             const res = await API.get(`/jobs/${id}/`)
             setJob(res.data)
@@ -41,11 +41,11 @@ export default function JobDetailPage() {
                         p => p.job === parseInt(id)
                     )
                     setAlreadyApplied(applied)
-                } catch (err) {
+                } catch (err){
                     console.error(err)
                 }
             }
-        } catch (err) {
+        } catch {
             toast.error('Failed to load job.')
         } finally {
             setLoading(false)
@@ -68,7 +68,7 @@ export default function JobDetailPage() {
             toast.success('Proposal submitted successfully! 🎉')
             setAlreadyApplied(true)
             setShowApplyForm(false)
-        } catch (err) {
+        } catch (err){
             toast.error(
                 err.response?.data?.error ||
                 err.response?.data?.non_field_errors?.[0] ||

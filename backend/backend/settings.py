@@ -32,7 +32,6 @@ INSTALLED_APPS = [
     'jobs',
     'proposals',
     'projects',
-    'payments',
     'chat',
     'disputes',
 ]

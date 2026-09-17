@@ -7,7 +7,7 @@ import FreelancerSidebar from '../../components/FreelancerSidebar.jsx'
 import '../../css/Dashboard.css'
 
 export default function FreelancerDashboard() {
-    const { user } = useAuth()
+    const { user, refreshUser } = useAuth()
     const [proposals, setProposals] = useState([])
     const [projects, setProjects] = useState([])
     const [loading, setLoading] = useState(true)
@@ -18,6 +18,7 @@ export default function FreelancerDashboard() {
                 const [proposalsRes, projectsRes] = await Promise.all([
                     API.get('/proposals/my-proposals/'),
                     API.get('/projects/'),
+                    refreshUser(),
                 ])
                 setProposals(proposalsRes.data)
                 setProjects(projectsRes.data)
@@ -28,7 +29,7 @@ export default function FreelancerDashboard() {
             }
         }
         fetchData()
-    }, [])
+    }, [refreshUser])
 
     const pendingProposals = proposals.filter(p => p.status === 'pending').length
     const acceptedProposals = proposals.filter(p => p.status === 'accepted').length

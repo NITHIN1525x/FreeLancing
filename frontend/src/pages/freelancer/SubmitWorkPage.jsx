@@ -3,8 +3,6 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import API from '../../api/axios.js'
-import { useWeb3 } from '../../context/Web3Context.jsx'
-import { submitWorkOnChain } from '../../utils/escrowContract.js'
 import FreelancerSidebar from '../../components/FreelancerSidebar.jsx'
 import '../../css/Dashboard.css'
 import '../../css/Jobs.css'
@@ -12,7 +10,6 @@ import '../../css/Jobs.css'
 export default function SubmitWorkPage() {
     const { id } = useParams()
     const navigate = useNavigate()
-    const { account, connectWallet, isMetaMaskInstalled } = useWeb3()
     const [project, setProject] = useState(null)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
@@ -27,11 +24,11 @@ export default function SubmitWorkPage() {
         fetchProject()
     }, [id])
 
-    const fetchProject = async () => {
+    async function fetchProject() {
         try {
             const res = await API.get(`/projects/${id}/`)
             setProject(res.data)
-        } catch (err) {
+        } catch {
             toast.error('Failed to load project.')
         } finally {
             setLoading(false)
@@ -53,31 +50,11 @@ export default function SubmitWorkPage() {
 
         setSubmitting(true)
         try {
-            let selectedWallet = account
-
-            if (project?.onchain_project_id) {
-                if (!isMetaMaskInstalled) {
-                    throw new Error('MetaMask is required to submit work for this local on-chain project.')
-                }
-
-                if (!selectedWallet) {
-                    selectedWallet = await connectWallet()
-                }
-
-                const txHash = await submitWorkOnChain(project.onchain_project_id)
-                await API.post(`/projects/${id}/submit-work/onchain-sync/`, {
-                    ...formData,
-                    tx_hash: txHash,
-                    wallet_address: selectedWallet || '',
-                })
-                toast.success('Work submitted and payment released on local MetaMask!')
-            } else {
-                await API.post(`/projects/${id}/submit-work/`, formData)
-                toast.success('Work submitted successfully!')
-            }
+            await API.post(`/projects/${id}/submit-work/`, formData)
+            toast.success('Work submitted successfully!')
 
             navigate('/freelancer/projects')
-        } catch (err) {
+        } catch (err){
             toast.error(err.response?.data?.error || err?.message || 'Failed to submit work.')
         } finally {
             setSubmitting(false)
@@ -116,7 +93,7 @@ export default function SubmitWorkPage() {
 
                 <div className="dashboard-header">
                     <h1>{project?.work_status === 'revision_requested' ? 'Resubmit Work' : 'Submit Work'}</h1>
-                    <p>Submit through local MetaMask escrow when the project is on-chain.</p>
+                    <p>Submit your work for the client to review and release payment.</p>
                 </div>
 
                 <div className="dashboard-card" style={{

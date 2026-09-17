@@ -9,6 +9,6 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ['role', 'is_staff']
     fieldsets = UserAdmin.fieldsets + (
         ('Marketplace Info', {
-            'fields': ('role', 'bio', 'skills', 'wallet_address', 'balance', 'avatar')
+            'fields': ('role', 'bio', 'skills', 'balance', 'avatar')
         }),
     )

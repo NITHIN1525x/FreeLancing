@@ -15,11 +15,11 @@ export default function FreelancerProjects() {
         fetchProjects()
     }, [])
 
-    const fetchProjects = async () => {
+    async function fetchProjects() {
         try {
             const res = await API.get('/projects/')
             setProjects(res.data)
-        } catch (err) {
+        } catch {
             toast.error('Failed to load projects.')
         } finally {
             setLoading(false)

@@ -53,10 +53,6 @@ class Project(models.Model):
     )
 
     revision_notes = models.TextField(blank=True, null=True)
-    # Optional blockchain tracking fields
-    onchain_project_id = models.PositiveBigIntegerField(blank=True, null=True)
-    contract_address = models.CharField(max_length=120, blank=True, null=True)
-    last_tx_hash = models.CharField(max_length=120, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

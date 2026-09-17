@@ -3,15 +3,12 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import API from '../../api/axios.js'
-import { useWeb3 } from '../../context/Web3Context.jsx'
-import { createProjectAndLockPaymentOnChain } from '../../utils/escrowContract.js'
 import ClientSidebar from '../../components/ClientSidebar.jsx'
 import '../../css/Dashboard.css'
 import '../../css/Jobs.css'
 import '../../css/Proposals.css'
 
 export default function ClientProjects() {
-    const { account, connectWallet, isMetaMaskInstalled } = useWeb3()
     const [projects, setProjects] = useState([])
     const [loading, setLoading] = useState(true)
     const [lockingId, setLockingId] = useState(null)
@@ -20,83 +17,25 @@ export default function ClientProjects() {
         fetchProjects()
     }, [])
 
-    const fetchProjects = async () => {
+    async function fetchProjects() {
         try {
             const res = await API.get('/projects/')
             setProjects(res.data)
-        } catch (err) {
+        } catch {
             toast.error('Failed to load projects.')
         } finally {
             setLoading(false)
         }
     }
 
-    const handleLockPayment = async (project) => {
-        if (!window.confirm('Lock payment into local MetaMask escrow?')) return
-
-        if (!isMetaMaskInstalled) {
-            toast.error('MetaMask is required for local on-chain lock payment.')
-            return
-        }
-
-        if (!project?.freelancer_details?.wallet_address) {
-            toast.error('Freelancer has no wallet address in profile. Ask them to connect MetaMask first.')
-            return
-        }
-
-        let selectedWallet = account
-        if (!selectedWallet) {
-            try {
-                selectedWallet = await connectWallet()
-            } catch (err) {
-                toast.error(err?.message || 'Failed to connect MetaMask.')
-                return
-            }
-        }
-
-        if (!selectedWallet) {
-            toast.error('No wallet selected in MetaMask.')
-            return
-        }
-
-        if (
-            selectedWallet.toLowerCase() ===
-            project.freelancer_details.wallet_address.toLowerCase()
-        ) {
-            toast.error('Client and freelancer must use different MetaMask accounts.')
-            return
-        }
-
-        setLockingId(project.id)
-        try {
-            const { onchainProjectId, txHash } = await createProjectAndLockPaymentOnChain({
-                freelancerWallet: project.freelancer_details.wallet_address,
-                amount: project.escrow_amount,
-            })
-
-            const res = await API.post(`/projects/${project.id}/lock-payment/onchain-sync/`, {
-                tx_hash: txHash,
-                onchain_project_id: onchainProjectId,
-                wallet_address: selectedWallet,
-            })
-
-            toast.success(res.data.message || 'Payment locked successfully on local MetaMask.')
-            fetchProjects()
-        } catch (err) {
-            toast.error(err.response?.data?.error || err?.message || 'Failed to lock payment on-chain.')
-        } finally {
-            setLockingId(null)
-        }
-    }
-
-    const handleSimulateLockPayment = async (projectId) => {
-        if (!window.confirm('Lock payment in local demo mode instead?')) return
+    const handleLockPayment = async (projectId) => {
+        if (!window.confirm('Lock this payment in escrow?')) return
         setLockingId(projectId)
         try {
             const res = await API.post(`/projects/${projectId}/lock-payment/`)
-            toast.success(res.data.message)
+            toast.success(res.data.message || 'Payment locked successfully.')
             fetchProjects()
-        } catch (err) {
+        } catch (err){
             toast.error(err.response?.data?.error || 'Failed to lock payment.')
         } finally {
             setLockingId(null)
@@ -131,7 +70,7 @@ export default function ClientProjects() {
             <main className="dashboard-main">
                 <div className="dashboard-header">
                     <h1>Active Projects</h1>
-                    <p>Use local MetaMask escrow, with a demo-only fallback if needed.</p>
+                    <p>Payments are securely tracked in your FreeLance account.</p>
                 </div>
 
                 {loading ? (
@@ -280,25 +219,13 @@ export default function ClientProjects() {
 
                                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                                     {project.payment_status === 'pending' && (
-                                        <>
-                                            <button
-                                                className="btn-primary"
-                                                onClick={() => handleLockPayment(project)}
-                                                disabled={lockingId === project.id}
-                                            >
-                                                {lockingId === project.id
-                                                    ? 'Locking...'
-                                                    : 'Lock Payment (Local MetaMask)'}
-                                            </button>
-
-                                            <button
-                                                className="btn-outline"
-                                                onClick={() => handleSimulateLockPayment(project.id)}
-                                                disabled={lockingId === project.id}
-                                            >
-                                                Fallback Demo Lock
-                                            </button>
-                                        </>
+                                        <button
+                                            className="btn-primary"
+                                            onClick={() => handleLockPayment(project.id)}
+                                            disabled={lockingId === project.id}
+                                        >
+                                            {lockingId === project.id ? 'Locking...' : 'Lock Payment'}
+                                        </button>
                                     )}
 
                                     {project.work_status === 'submitted' && (

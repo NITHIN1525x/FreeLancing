@@ -15,7 +15,6 @@ export default function ProfilePage() {
         username: user?.username || '',
         bio: user?.bio || '',
         skills: user?.skills || '',
-        wallet_address: user?.wallet_address || '',
     })
 
     const handleChange = (e) => {
@@ -31,7 +30,7 @@ export default function ProfilePage() {
             login(res.data, token)
             toast.success('Profile updated successfully! ✅')
             setEditing(false)
-        } catch (err) {
+        } catch {
             toast.error('Failed to update profile.')
         } finally {
             setSaving(false)
@@ -176,25 +175,6 @@ export default function ProfilePage() {
                             </div>
                         )}
 
-                        <div>
-                            <p style={{
-                                fontSize: '0.78rem',
-                                fontWeight: 700,
-                                color: '#aaa',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                marginBottom: '6px'
-                            }}>
-                                Wallet Address (Optional)
-                            </p>
-                            <p style={{
-                                color: '#555',
-                                fontFamily: 'monospace',
-                                fontSize: '0.88rem'
-                            }}>
-                                {user?.wallet_address || 'Not set'}
-                            </p>
-                        </div>
 
                         <div>
                             <p style={{
@@ -253,16 +233,6 @@ export default function ProfilePage() {
                             </div>
                         )}
 
-                        <div className="form-group">
-                            <label>Wallet Address (Optional)</label>
-                            <input
-                                type="text"
-                                name="wallet_address"
-                                value={formData.wallet_address}
-                                onChange={handleChange}
-                                placeholder="0x..."
-                            />
-                        </div>
 
                         <div style={{ display: 'flex', gap: '12px' }}>
                             <button

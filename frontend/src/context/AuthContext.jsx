@@ -1,34 +1,44 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import API from '../api/axios.js';
 
 const AuthContext = createContext();
 
+const storedValue = (key) => localStorage.getItem(key);
+
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(() => {
+        const storedUser = storedValue('user');
+        return storedUser ? JSON.parse(storedUser) : null;
+    });
+    const [token, setToken] = useState(() => storedValue('access_token'));
+    const [loading] = useState(false);
 
-    // On app load, restore user from localStorage
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('access_token');
-
-        if (storedUser && storedToken) {
-            setUser(JSON.parse(storedUser));
-            setToken(storedToken);
-        }
-        setLoading(false);
+    const persistUser = useCallback((userData) => {
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
     }, []);
 
-    // Called after successful login/register
+    const refreshUser = useCallback(async () => {
+        const response = await API.get('/profile/');
+        persistUser(response.data);
+        return response.data;
+    }, [persistUser]);
+
+    useEffect(() => {
+        if (token) {
+            refreshUser().catch(() => {
+                // Keep the cached profile if the server is temporarily unreachable.
+            });
+        }
+    }, [token, refreshUser]);
+
     const login = (userData, accessToken) => {
-        setUser(userData);
+        persistUser(userData);
         setToken(accessToken);
-        localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('access_token', accessToken);
     };
 
-    // Called on logout
     const logout = () => {
         setUser(null);
         setToken(null);
@@ -37,11 +47,10 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, token, login, logout, refreshUser, loading }}>
             {children}
         </AuthContext.Provider>
     );
 };
 
-// Custom hook for easy access
 export const useAuth = () => useContext(AuthContext);
